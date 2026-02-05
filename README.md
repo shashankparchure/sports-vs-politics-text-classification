@@ -87,6 +87,13 @@ The following machine learning models were trained and evaluated:
 | Random Forest | 94.02% | **96.15%** |
 | ANN | 94.44% | **95.30%** |
 
+
+
+The following figure compares the performance of **Bag of Words (BoW)** and **TF-IDF** feature representations across different machine learning models.
+
+![BoW vs TF-IDF Accuracy Comparison](assets/output.png)
+
+
 ### Observations
 
 - TF-IDF consistently outperformed Bag of Words across all models.
@@ -154,5 +161,6 @@ python -m models.train_ann
 ## Author
 
 Shashank Parchure
+
 B23CM1059
 
