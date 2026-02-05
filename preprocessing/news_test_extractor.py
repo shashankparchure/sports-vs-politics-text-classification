@@ -43,7 +43,7 @@ def main():
                     "text": article_text
                 })
 
-            time.sleep(1)  # be polite to servers
+            time.sleep(1)
 
     with open(OUTPUT_FILE, "w", newline="", encoding="utf-8") as outfile:
         writer = csv.DictWriter(outfile, fieldnames=["category", "url", "text"])

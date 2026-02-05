@@ -1,7 +1,6 @@
 import csv
 import sys
 
-# Handle large text fields safely (Windows-compatible)
 max_int = sys.maxsize
 while True:
     try:

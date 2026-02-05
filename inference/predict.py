@@ -73,7 +73,7 @@ def predict_text(text):
 if __name__ == "__main__":
     filename = input("Enter input text file name (.txt only): ").strip()
 
-    # ---- validation ----
+    # validation
     if not filename.lower().endswith(".txt"):
         print("Error: Please provide a .txt file only.")
         exit(1)
