@@ -3,12 +3,13 @@ import pandas as pd
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from tqdm import tqdm
 
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, classification_report
 
 from preprocessing.text_cleaning import clean_text
-from features.feature_rep import (build_vocabulary, compute_idf, tfidf_features)
+from features.feature_rep import (build_vocabulary, compute_idf, tfidf_features, bow_features)
 
 # Configs
 
@@ -43,18 +44,18 @@ X_train_texts, X_test_texts, y_train, y_test = train_test_split(clean_texts, y, 
 
 vocab = build_vocabulary(X_train_texts, ngram_range=NGRAM_RANGE, max_features=MAX_FEATURES)
 
-idf = compute_idf(X_train_texts, vocab, ngram_range=NGRAM_RANGE)
+# idf = compute_idf(X_train_texts, vocab, ngram_range=NGRAM_RANGE)
 
-X_train = tfidf_features(X_train_texts, vocab, idf, ngram_range=NGRAM_RANGE)
+# X_train = tfidf_features(X_train_texts, vocab, idf, ngram_range=NGRAM_RANGE)
 
-X_test = tfidf_features(X_test_texts, vocab, idf, ngram_range=NGRAM_RANGE)
+# X_test = tfidf_features(X_test_texts, vocab, idf, ngram_range=NGRAM_RANGE)
 
-# Conversion to torch tensors
-X_train = torch.tensor(X_train, dtype=torch.float32).to(DEVICE)
-y_train = torch.tensor(y_train, dtype=torch.float32).to(DEVICE)
+# # Conversion to torch tensors
+# X_train = torch.tensor(X_train, dtype=torch.float32).to(DEVICE)
+# y_train = torch.tensor(y_train, dtype=torch.float32).to(DEVICE)
 
-X_test = torch.tensor(X_test, dtype=torch.float32).to(DEVICE)
-y_test = torch.tensor(y_test, dtype=torch.float32).to(DEVICE)
+# X_test = torch.tensor(X_test, dtype=torch.float32).to(DEVICE)
+# y_test = torch.tensor(y_test, dtype=torch.float32).to(DEVICE)
 
 # ANN Model
 #Here I have used a ML model. It has 2 hidden layers. After trying out several activation function combinations, ReLU and tanh functions are used.
@@ -74,49 +75,127 @@ class ANN(nn.Module):
         x = self.fc3(x)                  # Raw logits
         return x
 
+print("\nBoW + ANN Results: \n")
 
-model = ANN(input_size=X_train.shape[1], hidden_size=HIDDEN_SIZE).to(DEVICE)
+X_train_bow = bow_features(X_train_texts, vocab, ngram_range=NGRAM_RANGE)
+X_test_bow = bow_features(X_test_texts, vocab, ngram_range=NGRAM_RANGE)
 
+X_train_bow = torch.tensor(X_train_bow, dtype=torch.float32).to(DEVICE)
+y_train_t = torch.tensor(y_train, dtype=torch.float32).to(DEVICE)
+
+X_test_bow = torch.tensor(X_test_bow, dtype=torch.float32).to(DEVICE)
+y_test_t = torch.tensor(y_test, dtype=torch.float32).to(DEVICE)
+
+model_bow = ANN(input_size=X_train_bow.shape[1], hidden_size=HIDDEN_SIZE).to(DEVICE)
 
 criterion = nn.BCEWithLogitsLoss()  # combines Sigmoid + BCE
-optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE) #Adam Optimizer ussed
+optimizer = optim.Adam(model_bow.parameters(), lr=LEARNING_RATE) #Adam Optimizer ussed
 
 # Training Loop
 
 for epoch in range(EPOCHS):
-    model.train()
-    perm = torch.randperm(X_train.size(0))
+    model_bow.train()
+    perm = torch.randperm(X_train_bow.size(0))
 
     epoch_loss = 0.0
 
-    for i in range(0, X_train.size(0), BATCH_SIZE):
+    progress_bar = tqdm(
+        range(0, X_train_bow.size(0), BATCH_SIZE),
+        desc=f"BoW Epoch {epoch+1}/{EPOCHS}",
+        leave=False
+    )
+
+    for i in progress_bar:
         idx = perm[i:i+BATCH_SIZE]
-        batch_x = X_train[idx]
-        batch_y = y_train[idx]
+        batch_x = X_train_bow[idx]
+        batch_y = y_train_t[idx]
 
         optimizer.zero_grad()
-        outputs = model(batch_x).squeeze()
+        outputs = model_bow(batch_x).squeeze()
         loss = criterion(outputs, batch_y)
         loss.backward()
         optimizer.step()
 
         epoch_loss += loss.item()
+        progress_bar.set_postfix(loss=loss.item())
 
-    print(f"Epoch [{epoch+1}/{EPOCHS}], Loss: {epoch_loss:.4f}")
+
+print("BoW Training Complete")
 
 # Evaluation
 
-model.eval()
+model_bow.eval()
 with torch.no_grad():
-    logits = model(X_test).squeeze()
+    logits = model_bow(X_test_bow).squeeze()
     preds = torch.sigmoid(logits) > 0.5
     preds = preds.cpu().numpy().astype(int)
 
-y_true = y_test.cpu().numpy().astype(int)
+print("\nBoW Accuracy:", accuracy_score(y_test, preds))
+print("\nBoW Classification Report:\n")
+print(classification_report(y_test, preds, target_names=["Politics", "Sports"]))
 
-print("\nAccuracy:", accuracy_score(y_true, preds))
-print("\nClassification Report:\n")
-print(classification_report(y_true, preds, target_names=["Politics", "Sports"]))
 
-torch.save(model.state_dict(), "models/ann.pt")
-print("ANN model saved.")
+print("\nTF-IDF + ANN Results: \n")
+
+idf = compute_idf(X_train_texts, vocab, ngram_range=NGRAM_RANGE)
+
+X_train_tfidf = tfidf_features(X_train_texts, vocab, idf, ngram_range=NGRAM_RANGE)
+X_test_tfidf = tfidf_features(X_test_texts, vocab, idf, ngram_range=NGRAM_RANGE)
+
+X_train_tfidf = torch.tensor(X_train_tfidf, dtype=torch.float32).to(DEVICE)
+y_train_t = torch.tensor(y_train, dtype=torch.float32).to(DEVICE)
+
+X_test_tfidf = torch.tensor(X_test_tfidf, dtype=torch.float32).to(DEVICE)
+y_test_t = torch.tensor(y_test, dtype=torch.float32).to(DEVICE)
+
+model_tfidf = ANN(input_size=X_train_tfidf.shape[1], hidden_size=HIDDEN_SIZE).to(DEVICE)
+
+criterion = nn.BCEWithLogitsLoss()
+optimizer = optim.Adam(model_tfidf.parameters(), lr=LEARNING_RATE)
+
+for epoch in range(EPOCHS):
+    model_tfidf.train()
+    perm = torch.randperm(X_train_tfidf.size(0))
+
+    epoch_loss = 0.0
+
+    progress_bar = tqdm(
+        range(0, X_train_tfidf.size(0), BATCH_SIZE),
+        desc=f"TF-IDF Epoch {epoch+1}/{EPOCHS}",
+        leave=False
+    )
+
+    for i in progress_bar:
+        idx = perm[i:i+BATCH_SIZE]
+        batch_x = X_train_tfidf[idx]
+        batch_y = y_train_t[idx]
+
+        optimizer.zero_grad()
+        outputs = model_tfidf(batch_x).squeeze()
+        loss = criterion(outputs, batch_y)
+        loss.backward()
+        optimizer.step()
+
+        epoch_loss += loss.item()
+        progress_bar.set_postfix(loss=loss.item())
+
+
+
+print("TF-IDF Training Complete")
+
+model_tfidf.eval()
+with torch.no_grad():
+    logits = model_tfidf(X_test_tfidf).squeeze()
+    preds = torch.sigmoid(logits) > 0.5
+    preds = preds.cpu().numpy().astype(int)
+
+print("\nTF-IDF Accuracy:", accuracy_score(y_test, preds))
+print("\nTF-IDF Classification Report:\n")
+print(classification_report(y_test, preds, target_names=["Politics", "Sports"]))
+
+
+# Model Saving
+torch.save(model_bow.state_dict(), "models/ann_bow.pt")
+torch.save(model_tfidf.state_dict(), "models/ann_tfidf.pt")
+
+print("BoW and TF-IDF ANN models saved.")

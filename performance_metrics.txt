@@ -1,0 +1,107 @@
+SVM:
+BoW Test Accuracy: 0.9273504273504274
+
+BoW Classification Report:
+
+              precision    recall  f1-score   support
+
+    Politics       0.92      0.93      0.93       115
+      Sports       0.93      0.92      0.93       119
+
+    accuracy                           0.93       234
+   macro avg       0.93      0.93      0.93       234
+weighted avg       0.93      0.93      0.93       234
+
+
+TF-IDF + SVM Results: 
+
+TF-IDF Test Accuracy: 0.9487179487179487
+
+TF-IDF Classification Report:
+
+              precision    recall  f1-score   support
+
+    Politics       0.91      0.99      0.95       115
+      Sports       0.99      0.91      0.95       119
+
+    accuracy                           0.95       234
+   macro avg       0.95      0.95      0.95       234
+weighted avg       0.95      0.95      0.95       234
+
+
+BoW and TF-IDF SVM models saved.
+
+
+RF:
+BoW + Random Forest Results:
+
+BoW Accuracy: 0.9401709401709402
+
+BoW Classification Report:
+
+              precision    recall  f1-score   support
+
+    Politics       0.93      0.95      0.94       115
+      Sports       0.95      0.93      0.94       119
+
+    accuracy                           0.94       234
+   macro avg       0.94      0.94      0.94       234
+weighted avg       0.94      0.94      0.94       234
+
+
+TF-IDF + Random Forest Results: 
+
+TF-IDF Accuracy: 0.9615384615384616
+
+TF-IDF Classification Report:
+
+              precision    recall  f1-score   support
+
+    Politics       0.94      0.98      0.96       115
+      Sports       0.98      0.94      0.96       119
+
+    accuracy                           0.96       234
+   macro avg       0.96      0.96      0.96       234
+weighted avg       0.96      0.96      0.96       234
+
+
+BoW and TF-IDF Random Forest models saved.
+
+
+ANN:
+BoW + ANN Results: 
+
+BoW Training Complete
+
+BoW Accuracy: 0.9444444444444444
+
+BoW Classification Report:
+
+              precision    recall  f1-score   support
+
+    Politics       0.94      0.95      0.94       115
+      Sports       0.95      0.94      0.95       119
+
+    accuracy                           0.94       234
+   macro avg       0.94      0.94      0.94       234
+weighted avg       0.94      0.94      0.94       234
+
+
+TF-IDF + ANN Results:
+
+TF-IDF Training Complete
+
+TF-IDF Accuracy: 0.9529914529914529
+
+TF-IDF Classification Report:
+
+              precision    recall  f1-score   support
+
+    Politics       0.94      0.97      0.95       115
+      Sports       0.97      0.94      0.95       119
+
+    accuracy                           0.95       234
+   macro avg       0.95      0.95      0.95       234
+weighted avg       0.95      0.95      0.95       234
+
+BoW and TF-IDF ANN models saved.
